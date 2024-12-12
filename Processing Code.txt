@@ -1,0 +1,115 @@
+int[] values = {124, 94, 94, 71, 65, 76, 87, 90, 69, 67};
+String[] labels = {
+  "Chicken Tikka Masala", "Chicken Korma", "Chicken Madrass", "Chicken Dansak", "Chicken Biriany",
+  "Lamb Tikka Masala", "Lamb Korma", "Lamb Madrass", "Lamb Dansak", "Lamb Biriany"
+};
+color[] barColors = {
+  color(255, 0, 0), color(0, 255, 0), color(0, 0, 255), color(255, 255, 0), color(255, 0, 255),
+  color(0, 255, 255), color(128, 0, 128), color(255, 165, 0), color(0, 128, 128), color(128, 128, 0)
+};
+
+int maxVal = max(values);
+int barWidth = 30;
+int spacing = 40; // Increased spacing for better readability
+int chartWidth;
+int chartDepth = 200;
+
+float rotX = PI / 6;
+float rotY = 0;
+float lastMouseX, lastMouseY;
+float zoom = -300;
+boolean isDragging = false;
+
+void setup() {
+  size(800, 600, P3D);
+  chartWidth = (barWidth + spacing) * values.length;
+}
+
+void draw() {
+  background(200);
+  lights();
+
+  translate(width / 2, height / 2, zoom);
+  rotateX(rotX);
+  rotateY(rotY);
+
+  translate(-chartWidth / 2, height / 4, -chartDepth / 2);
+
+  for (int i = 0; i < values.length; i++) {
+    float barHeight = map(values[i], 0, maxVal, 0, chartDepth);
+
+    // Draw bar
+    pushMatrix();
+    translate(i * (barWidth + spacing), -barHeight / 2, 0);
+    fill(barColors[i]);
+    box(barWidth, barHeight, barWidth);
+    popMatrix();
+
+    // Draw labels
+    pushMatrix();
+    translate(i * (barWidth + spacing), 10, 0);
+    rotateY(-rotY); // Ensure text faces the front
+    fill(0);
+    textSize(14); // Slightly larger text
+    textAlign(CENTER, CENTER);
+    String[] words = labels[i].split(" ");
+    for (int j = 0; j < words.length; j++) {
+      text(words[j], 0, j * 14); // Adjust spacing for larger text
+    }
+    popMatrix();
+
+    // Draw values on top of bars
+    pushMatrix();
+    translate(i * (barWidth + spacing), -barHeight - 10, 0);
+    rotateY(-rotY); // Ensure text faces the front
+    fill(0);
+    textSize(14); // Slightly larger text
+    textAlign(CENTER, CENTER);
+    text(values[i], 0, 0);
+    popMatrix();
+  }
+
+  // Draw Y-axis numbers
+  for (int i = 0; i <= 150; i += 10) {
+    float yPos = map(i, 0, maxVal, 0, -chartDepth);
+    pushMatrix();
+    translate(-50, yPos, 0);
+    rotateY(-rotY); // Ensure text faces the front
+    fill(0);
+    textSize(14); // Slightly larger text
+    textAlign(RIGHT, CENTER);
+    text(i, 0, 0);
+    popMatrix();
+  }
+
+  // Draw axis
+  stroke(0);
+  line(0, 0, 0, chartWidth, 0, 0); // X-axis
+  line(0, 0, 0, 0, -chartDepth, 0); // Y-axis
+  line(0, 0, 0, 0, 0, chartDepth); // Z-axis
+}
+
+void mousePressed() {
+  lastMouseX = mouseX;
+  lastMouseY = mouseY;
+  isDragging = true;
+}
+
+void mouseDragged() {
+  if (isDragging) {
+    float dx = radians(mouseX - lastMouseX);
+    float dy = radians(mouseY - lastMouseY);
+    rotY += dx;
+    rotX -= dy;
+    lastMouseX = mouseX;
+    lastMouseY = mouseY;
+  }
+}
+
+void mouseReleased() {
+  isDragging = false;
+}
+
+void mouseWheel(MouseEvent event) {
+  zoom -= event.getCount() * 20;
+}
